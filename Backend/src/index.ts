@@ -1,7 +1,11 @@
-const express =require('express')
+const express = require('express')
 const app = express();
 import router from "./routes";
-const port = 5000;
+
+
+require('dotenv').config({ path: `.env.${process.env.NODE_ENV}` })
+
+const port = process.env.PORT;
 
 
 app.use(router)
