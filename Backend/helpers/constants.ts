@@ -1,6 +1,6 @@
 const messages: any = {
-    getCommitListSuccess: "commit list get successfully",
-    getRepoListSuccess: "commit list get successfully",
+    getRepoListSuccess: 'Repo list retrieved successfully',
+    getCommitListSuccess: 'Commit list retrieved successfully',
     getRepoListFailed: "some error occure while fetching commit list",
     getCommitListFailed: "some error occure while fetching commit list",
     error:"error occurred: No data returned"

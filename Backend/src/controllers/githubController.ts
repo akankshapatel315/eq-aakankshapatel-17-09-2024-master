@@ -40,7 +40,7 @@ export const getCommitList = async (req, res) => {
                 res.status(constants.statusCodes.success).json({
                     data: paginatedCommits,
                     totalCount: totalCount,
-                    message: constants.messages.getRepoListSuccess,
+                    message: constants.messages.getCommitListSuccess,
                 });
             })
             .catch(error => {
@@ -62,4 +62,3 @@ export const getCommitList = async (req, res) => {
 };
 
 module.exports = { getRepoList, getCommitList };
-
