@@ -1,4 +1,4 @@
-#Run the project setup
+**#Run the project **
 
 Front end: npm i, npm run dev
 
