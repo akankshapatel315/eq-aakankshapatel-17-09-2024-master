@@ -1,324 +1,132 @@
-import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import axiosGet from '../helpers/commonApis';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import axiosGet from '../helpers/commonApis'; // Adjust this path according to your project structure
 import { toast } from 'react-toastify';
-import { getCommitListAPI } from '../helpers/apis';
+import { getCommitListAPI } from '../helpers/apis'; // Adjust this path as well
+import Loader from './loader';
+import { useSelector } from 'react-redux';
 
 const CommitList = () => {
+    const repoList = useSelector((state: any) =>  state.git.repoData)
+    const { owner, repoName } = useParams();
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+    const [commitList, setCommitList] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCommits, setTotalCommits] = useState(0);
+    const commitsPerPage = 10;
 
-    const { owner,repoName } = useParams();
-    const [commitList,setCommitList] = useState([]);
-    async function getCommitList(owner: any, repoName: any) {
-        axiosGet(`${getCommitListAPI}/${owner}/${repoName}`)
-          .then((response: any) => {
-            if (response.status === 200 && response.data.data.length > 0) {
-              setCommitList(response.data.data)
+    
+    async function getCommitList(owner: any, repoName: any, page: number) {
+        try {
+            setLoading(true);
+            const response: any = await axiosGet(`${getCommitListAPI}/${owner}/${repoName}?per_page=${commitsPerPage}&page=${page}`);
+            if (response.status === 200) {
+                setCommitList(response.data.data);
+                setTotalCommits(Number(response.data.totalCount));
             }
-            else {
-                setCommitList([])
-            }
-          }).catch((error) => {
-            toast.error(error.response.statusText);
-            setCommitList([])
-          })
-      }
+        } catch (error: any) {
+            toast.error(error.response?.statusText || 'An error occurred');
+            setCommitList([]);
+            setLoading(false);
+        } finally {
+            setLoading(false);
+        }
+    }
 
-    useEffect(()=>
-    {
-        getCommitList(owner,repoName)
-    },[])
+    useEffect(() => {
+        getCommitList(owner, repoName, currentPage);
+    }, [owner, repoName, currentPage]);
+
+    const totalPages = Math.ceil(totalCommits / commitsPerPage);
+
     return (
         <>
-            <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
-                <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" className="p-4">
-                                <div className="flex items-center">
-                                    <input id="checkbox-all-search" type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                                    <label className="sr-only">checkbox</label>
-                                </div>
-                            </th>
-                            <th scope="col" className="px-6 py-3">
-                                Product name
-                            </th>
-                            <th scope="col" className="px-6 py-3">
-                                Color
-                            </th>
-                            <th scope="col" className="px-6 py-3">
-                                Category
-                            </th>
-                            <th scope="col" className="px-6 py-3">
-                                Price
-                            </th>
-                            <th scope="col" className="px-6 py-3">
-                                Action
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                            <td className="w-4 p-4">
-                                <div className="flex items-center">
-                                    <input id="checkbox-table-search-1" type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                                    <label className="sr-only">checkbox</label>
-                                </div>
-                            </td>
-                            <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                Apple MacBook Pro 17"
-                            </th>
-                            <td className="px-6 py-4">
-                                Silver
-                            </td>
-                            <td className="px-6 py-4">
-                                Laptop
-                            </td>
-                            <td className="px-6 py-4">
-                                $2999
-                            </td>
-                            <td className="px-6 py-4">
-                                <a href="#" className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
-                            </td>
-                        </tr>
-                        {/* <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                <td className="w-4 p-4">
-                    <div className="flex items-center">
-                        <input id="checkbox-table-search-2" type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                        <label for="checkbox-table-search-2" className="sr-only">checkbox</label>
-                    </div>
-                </td>
-                <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    Microsoft Surface Pro
-                </th>
-                <td className="px-6 py-4">
-                    White
-                </td>
-                <td className="px-6 py-4">
-                    Laptop PC
-                </td>
-                <td className="px-6 py-4">
-                    $1999
-                </td>
-                <td className="px-6 py-4">
-                    <a href="#" className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
-                </td>
-            </tr>
-            <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                <td className="w-4 p-4">
-                    <div className="flex items-center">
-                        <input id="checkbox-table-search-3" type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                        <label for="checkbox-table-search-3" className="sr-only">checkbox</label>
-                    </div>
-                </td>
-                <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    Magic Mouse 2
-                </th>
-                <td className="px-6 py-4">
-                    Black
-                </td>
-                <td className="px-6 py-4">
-                    Accessories
-                </td>
-                <td className="px-6 py-4">
-                    $99
-                </td>
-                <td className="px-6 py-4">
-                    <a href="#" className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
-                </td>
-            </tr>
-            <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                <td className="w-4 p-4">
-                    <div className="flex items-center">
-                        <input id="checkbox-table-search-3" type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                        <label for="checkbox-table-search-3" className="sr-only">checkbox</label>
-                    </div>
-                </td>
-                <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    Apple Watch
-                </th>
-                <td className="px-6 py-4">
-                    Black
-                </td>
-                <td className="px-6 py-4">
-                    Watches
-                </td>
-                <td className="px-6 py-4">
-                    $199
-                </td>
-                <td className="px-6 py-4">
-                    <a href="#" className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
-                </td>
-            </tr>
-            <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                <td className="w-4 p-4">
-                    <div className="flex items-center">
-                        <input id="checkbox-table-search-3" type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                        <label for="checkbox-table-search-3" className="sr-only">checkbox</label>
-                    </div>
-                </td>
-                <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    Apple iMac
-                </th>
-                <td className="px-6 py-4">
-                    Silver
-                </td>
-                <td className="px-6 py-4">
-                    PC
-                </td>
-                <td className="px-6 py-4">
-                    $2999
-                </td>
-                <td className="px-6 py-4">
-                    <a href="#" className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
-                </td>
-            </tr>
-            <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                <td className="w-4 p-4">
-                    <div className="flex items-center">
-                        <input id="checkbox-table-search-3" type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                        <label for="checkbox-table-search-3" className="sr-only">checkbox</label>
-                    </div>
-                </td>
-                <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    Apple AirPods
-                </th>
-                <td className="px-6 py-4">
-                    White
-                </td>
-                <td className="px-6 py-4">
-                    Accessories
-                </td>
-                <td className="px-6 py-4">
-                    $399
-                </td>
-                <td className="px-6 py-4">
-                    <a href="#" className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
-                </td>
-            </tr>
-            <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                <td className="w-4 p-4">
-                    <div className="flex items-center">
-                        <input id="checkbox-table-search-3" type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                        <label for="checkbox-table-search-3" className="sr-only">checkbox</label>
-                    </div>
-                </td>
-                <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    iPad Pro
-                </th>
-                <td className="px-6 py-4">
-                    Gold
-                </td>
-                <td className="px-6 py-4">
-                    Tablet
-                </td>
-                <td className="px-6 py-4">
-                    $699
-                </td>
-                <td className="px-6 py-4">
-                    <a href="#" className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
-                </td>
-            </tr>
-            <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                <td className="w-4 p-4">
-                    <div className="flex items-center">
-                        <input id="checkbox-table-search-3" type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                        <label for="checkbox-table-search-3" className="sr-only">checkbox</label>
-                    </div>
-                </td>
-                <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    Magic Keyboard
-                </th>
-                <td className="px-6 py-4">
-                    Black
-                </td>
-                <td className="px-6 py-4">
-                    Accessories
-                </td>
-                <td className="px-6 py-4">
-                    $99
-                </td>
-                <td className="px-6 py-4">
-                    <a href="#" className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
-                </td>
-            </tr>
-            <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                <td className="w-4 p-4">
-                    <div className="flex items-center">
-                        <input id="checkbox-table-search-3" type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                        <label for="checkbox-table-search-3" className="sr-only">checkbox</label>
-                    </div>
-                </td>
-                <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    Smart Folio iPad Air
-                </th>
-                <td className="px-6 py-4">
-                    Blue
-                </td>
-                <td className="px-6 py-4">
-                    Accessories
-                </td>
-                <td className="px-6 py-4">
-                    $79
-                </td>
-                <td className="px-6 py-4">
-                    <a href="#" className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
-                </td>
-            </tr>
-            <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                <td className="w-4 p-4">
-                    <div className="flex items-center">
-                        <input id="checkbox-table-search-3" type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                        <label for="checkbox-table-search-3" className="sr-only">checkbox</label>
-                    </div>
-                </td>
-                <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    AirTag
-                </th>
-                <td className="px-6 py-4">
-                    Silver
-                </td>
-                <td className="px-6 py-4">
-                    Accessories
-                </td>
-                <td className="px-6 py-4">
-                    $29
-                </td>
-                <td className="px-6 py-4">
-                    <a href="#" className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
-                </td>
-            </tr> */}
-                    </tbody>
-                </table>
-                <nav className="flex items-center flex-column flex-wrap md:flex-row justify-between pt-4" aria-label="Table navigation">
-                    <span className="text-sm font-normal text-gray-500 dark:text-gray-400 mb-4 md:mb-0 block w-full md:inline md:w-auto">Showing <span className="font-semibold text-gray-900 dark:text-white">1-10</span> of <span className="font-semibold text-gray-900 dark:text-white">1000</span></span>
-                    <ul className="inline-flex -space-x-px rtl:space-x-reverse text-sm h-8">
-                        <li>
-                            <a href="#" className="flex items-center justify-center px-3 h-8 ms-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">Previous</a>
-                        </li>
-                        <li>
-                            <a href="#" className="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">1</a>
-                        </li>
-                        <li>
-                            <a href="#" className="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">2</a>
-                        </li>
-                        <li>
-                            <a href="#" aria-current="page" className="flex items-center justify-center px-3 h-8 text-blue-600 border border-gray-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white">3</a>
-                        </li>
-                        <li>
-                            <a href="#" className="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">4</a>
-                        </li>
-                        <li>
-                            <a href="#" className="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">5</a>
-                        </li>
-                        <li>
-                            <a href="#" className="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">Next</a>
-                        </li>
-                    </ul>
-                </nav>
+            <header className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 flex items-center justify-between">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="flex items-center space-x-2 bg-white text-blue-600 px-4 py-2 rounded-lg shadow hover:bg-gray-100 transition duration-200"
+                >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 3a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H8a1 1 0 110-2h3V4a1 1 0 011-1z" />
+                    </svg>
+                    <span>Back</span>
+                </button>
+                <h1 className="text-2xl font-bold">Commit List for {repoName}</h1>
+            </header>
+
+            <div className="container mx-auto p-4">
+                <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
+                    <table className="w-full text-sm text-left text-gray-500">
+                        <thead className="bg-gradient-to-r from-blue-500 to-purple-500 text-white uppercase">
+                            <tr>
+                                <th scope="col" className="px-6 py-3">Commit Message</th>
+                                <th scope="col" className="px-6 py-3">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {commitList.length > 0 ? (
+                                commitList.map((commit: any) => (
+                                    <tr key={commit.sha} className="bg-white border-b hover:bg-blue-50 transition-colors">
+                                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                                            {commit.commit.message}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {new Date(commit.commit.author.date).toLocaleString()}
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={2} className="text-center py-4">No commits found</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                    {loading && <Loader />}
+                    <nav className="flex items-center justify-between pt-4" aria-label="Table navigation">
+                        <span className="text-sm font-normal text-gray-500">
+                            Showing <span className="font-semibold text-gray-900">{(currentPage - 1) * commitsPerPage + 1}-{Math.min(currentPage * commitsPerPage, totalCommits)}</span> of <span className="font-semibold text-gray-900">{totalCommits}</span>
+                        </span>
+                        <ul className="inline-flex -space-x-px text-sm h-8">
+                            <li>
+                                <button
+                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                    className="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100"
+                                    disabled={currentPage === 1}
+                                >
+                                    Previous
+                                </button>
+                            </li>
+                            {[...Array(totalPages)].map((_, index) => (
+                                <li key={index}>
+                                    <button
+                                        onClick={() => setCurrentPage(index + 1)}
+                                        className={`flex items-center justify-center px-3 h-8 leading-tight ${currentPage === index + 1 ? 'bg-gray-300 text-gray-900' : 'text-gray-500 bg-white'} border border-gray-300 hover:bg-gray-100`}
+                                    >
+                                        {index + 1}
+                                    </button>
+                                </li>
+                            ))}
+                            <li>
+                                <button
+                                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                                    className="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100"
+                                    disabled={currentPage === totalPages}
+                                >
+                                    Next
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
             </div>
 
+            <footer className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 text-center mt-4">
+                <p>&copy; 2024 Commit List. All rights reserved.</p>
+            </footer>
         </>
-    )
-}
+    );
+};
 
-export default CommitList
+export default CommitList;

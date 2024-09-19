@@ -1,44 +1,47 @@
-import { useState } from 'react'
+import { useState } from 'react';
 import _ from 'lodash';
 import axiosGet from '../helpers/commonApis';
 import { getRepoListAPI } from '../helpers/apis';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import Loader from './loader';
+import { GET_GITHUB_REPO_DATA } from '../actions/githublistAction';
+import { useDispatch } from 'react-redux'
 const RepoList = () => {
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [repoList, setRepoList] = useState([]);
 
   async function getRepoList(searchedValue: any) {
-    setLoading(true)
+    setLoading(true);
     axiosGet(`${getRepoListAPI}/${searchedValue}`)
       .then((response: any) => {
         if (response.status === 200 && response.data.data.length > 0) {
-          setRepoList(response.data.data)
-          setLoading(false)
-
+          setRepoList(response.data.data);
+          dispatch({ type: GET_GITHUB_REPO_DATA, payload: response?.data?.data });
+        } else {
+          setRepoList([]);
+        }
+        setLoading(false);
+      })
+      .catch((error) => {
+        if (error.status === 403) {
+          toast.error('API rate limit exceeded');
         }
         else {
-          setRepoList([]);
-          setLoading(false)
-
+          toast.error(error.response.statusText);
         }
-      }).catch((error) => {
-        toast.error(error.response.statusText);
         setRepoList([]);
-        setLoading(false)
-
-      })
+        setLoading(false);
+      });
   }
 
-
   const debouncedSearch = _.debounce((term) => {
-    getRepoList(term)
+    getRepoList(term);
   }, 500);
-
 
   const handleInputChange = (event: any) => {
     const { value } = event.target;
@@ -47,56 +50,70 @@ const RepoList = () => {
   };
 
   const navigateCommitPage = (repo: any) => {
-    console.log('repo.name :>> ', repo.name);
-    navigate(`commitList/${repo.owner.login}/${repo.name}`, { replace: true })
-  }
+    navigate(`commitList/${repo.owner.login}/${repo.name}`, { replace: true });
+  };
 
+  const handleBackButton = () => {
+    navigate("/"); 
+  };
 
   return (
     <>
-      <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
-        <div className="flex flex-column sm:flex-row flex-wrap space-y-4 sm:space-y-0 items-center justify-between pb-4">
-          <label className="sr-only">Search</label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 rtl:inset-r-0 rtl:right-0 flex items-center ps-3 pointer-events-none">
-              <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
-            </div>
-            <input
-              value={search}
-              onChange={handleInputChange}
-              type="text" id="table-search" className="block p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Search for items" />
-          </div>
+      <header className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Repository Search</h1>
+        <button
+          onClick={handleBackButton}
+          className="bg-white text-blue-600 font-semibold py-2 px-4 rounded-lg shadow hover:bg-gray-100 transition duration-200"
+        >
+          Back
+        </button>
+      </header>
+
+      <div className="container mx-auto p-4">
+        <div className="relative mb-6">
+          <input
+            value={search}
+            onChange={handleInputChange}
+            type="text"
+            className="block p-3 text-sm text-gray-900 border border-blue-300 rounded-lg w-full bg-white focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Search for repositories..."
+          />
         </div>
-        <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-            <tr>
-              <th scope="col" className="px-6 py-3">
-                Reposatory Name
-              </th>
-            </tr>
-          </thead>
-          {
-            repoList.length > 0 && repoList.map((repo: any, index: number) => {
-              return (<>
-                <tbody>
-                  <tr onClick={(e) => { navigateCommitPage(repo); e.preventDefault() }} key={index} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
 
-                    <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+        <div className="overflow-x-auto shadow-md sm:rounded-lg">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="bg-blue-500 text-white uppercase">
+              <tr>
+                <th className="px-6 py-3">Repository Name</th>
+              </tr>
+            </thead>
+            <tbody>
+              {repoList.length > 0 &&
+                repoList.map((repo: any, index) => (
+                  <tr
+                    onClick={(e) => {
+                      navigateCommitPage(repo);
+                      e.preventDefault();
+                    }}
+                    key={index}
+                    className="bg-white border-b hover:bg-blue-50 transition-colors cursor-pointer"
+                  >
+                    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                       {repo.name}
-                    </th>
-
+                    </td>
                   </tr>
-                </tbody>
-              </>
-              )
-            })
-          }
-
-        </table>
+                ))}
+            </tbody>
+          </table>
+        </div>
+        {loading && <Loader />}
       </div>
-      {loading && <Loader/>}
-    </>
-  )
-}
 
-export default RepoList
+      <footer className="bg-blue-600 text-white p-4 text-center mt-4">
+        <p>&copy; 2024 Repository Search. All rights reserved.</p>
+      </footer>
+    </>
+  );
+};
+
+export default RepoList;

@@ -1,0 +1,1 @@
+export const GET_GITHUB_REPO_DATA:string = "GET_REPO_DATA";
