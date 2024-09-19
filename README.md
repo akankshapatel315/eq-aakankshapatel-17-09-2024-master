@@ -1,3 +1,9 @@
+#Run the project setup
+
+Front end: npm i, npm run dev
+Back end: npm i, add secretKey as GITHUB_TOKEN as git not allowed to push env which contains secret token  and npm run dev or qa or pros
+
+
 # GitHub Repository Viewer - Take-Home Assignment - Aakanksha Patel
 
 ## Overview
