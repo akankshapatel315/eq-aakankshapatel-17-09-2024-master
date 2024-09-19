@@ -1,55 +1,22 @@
-import axios from "axios";
-import constants from "../../helpers/constants";
+import axios from 'axios';
+import constants from '../../helpers/constants';
 
-const getRepoList = async (req: any, res: any) => {
-    try {
-        await axios.get(`${process.env.GIT_URL}/users/${req.params.username}/repos?sort=updated&direction=desc&per_page=10`, { headers: req.headers })
-            .then((result) => {
-                if (!result) {
-                    throw {
-                        status: false,
-                        message: 'error occured',
-                    }
-                }
-                const list = result?.data?.filter((repo) => repo.private === false);
-                res.status(constants.statusCodes.success).json({ data: list, message: constants.messages.getRepoListSuccess });
-            })
-            .catch((error) => {
-                res.status(error.status).json({
-                    status: false,
-                    error: error,
-                });
-            });
-
-    } catch (error) {
-        res.status(constants.statusCodes.serverError).json({
-            status: false,
-            error: error,
-        });
-    }
+export const getRepoList = async (req, res, next) => {
+  try {
+    const response = await axios.get(`${process.env.GIT_URL}/users/${req.params.username}/repos`);
+    const data = response.data;
+    res.status(constants.statusCodes.success).json({ data, message: constants.messages.getRepoListSuccess });
+  } catch (error) {
+    next(error);
+  }
 };
 
-const getCommitList = async (req: any, res: any) => {
-    try {
-        await axios.get(`${process.env.GIT_URL}/repos/${req.params.owner}/${req.params.reponame}/commits?per_page=10`)
-            .then((response) => {
-                if (!response.data) {
-                    throw {
-
-                    }
-                }
-                res.status(constants.statusCodes.success).json({ data: response.data, message: constants.messages.getRepoListSuccess });
-            }).catch((error) => {
-                res.status(error.status).json({
-                    status: false,
-                    error: error,
-                });
-            })
-    } catch (error) {
-        res.status(constants.statusCodes.serverError).json({
-            status: false,
-            error: error,
-        });
-    }
+export const getCommitList = async (req, res, next) => {
+  try {
+    const response = await axios.get(`${process.env.GIT_URL}/repos/${req.params.owner}/${req.params.reponame}/commits`);
+    const data = response.data.slice(0, req.query.per_page);
+    res.status(constants.statusCodes.success).json({ data, totalCount: response.data.length, message: constants.messages.getCommitListSuccess });
+  } catch (error) {
+    next(error);
+  }
 };
-module.exports = { getRepoList, getCommitList };
