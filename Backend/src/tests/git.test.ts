@@ -9,7 +9,7 @@ describe('getRepoList', () => {
       json: jest.fn(() => res),
     };
     const next = jest.fn();
-    await getRepoList(req, res, next);
+    await getRepoList(req, res);
 
     expect(res.status).toHaveBeenCalledTimes(1);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -29,7 +29,7 @@ describe('getRepoList', () => {
     const next = jest.fn();
     jest.spyOn(axios, 'get').mockRejectedValueOnce(new Error('API error'));
 
-    await getRepoList(req, res, next);
+    await getRepoList(req, res);
 
     expect(next).toHaveBeenCalledTimes(1);
     expect(next).toHaveBeenCalledWith(expect.any(Error));
@@ -44,7 +44,7 @@ describe('getCommitList', () => {
       json: jest.fn(() => res),
     };
     const next = jest.fn();
-    await getCommitList(req, res, next);
+    await getCommitList(req, res);
 
     expect(res.status).toHaveBeenCalledTimes(1);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -65,7 +65,7 @@ describe('getCommitList', () => {
     const next = jest.fn();
     jest.spyOn(axios, 'get').mockRejectedValueOnce(new Error('API error'));
 
-    await getCommitList(req, res, next);
+    await getCommitList(req, res);
 
     expect(next).toHaveBeenCalledTimes(1);
     expect(next).toHaveBeenCalledWith(expect.any(Error));
